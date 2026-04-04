@@ -1,0 +1,236 @@
+# OpenSpec Config — Inventory SaaS (NestJS)
+# Schema: https://openspec.dev/schema/spec-driven/v1
+
+schema: spec-driven
+
+artifact_store:
+  mode: hybrid
+
+context: |
+  Product: Stockly
+  Repository: multi-tenant-inventory
+  Backend: NestJS + TypeScript
+  ORM: Prisma
+  Database: PostgreSQL
+  Frontend: Next.js (separate client)
+  Architecture: Modular Monolith
+  Runtime: Node.js
+  Package manager: npm
+  Testing: Jest
+  API: REST
+  Multi-tenant: store_id isolation (shared DB)
+
+# WORKFLOW RULES
+
+rules:
+  proposal:
+    - MUST include affected modules (products, sales, variants, etc.)
+    - MUST identify impact on multi-tenant isolation
+    - MUST define rollback strategy for schema changes
+
+  specs:
+    - MUST use RFC 2119 keywords (MUST, SHOULD, MAY)
+    - MUST define measurable acceptance criteria
+    - MUST align with data-models.md and business-rules.md
+
+  design:
+    - MUST follow NestJS modular architecture
+    - MUST document flow: controller → service → domain → repository
+    - MUST keep modules isolated
+
+  tasks:
+    - MUST be grouped by module
+    - MUST be independently executable
+    - MUST be completable in one session
+
+  apply:
+    - MUST follow defined architecture layers strictly
+    - MUST NOT bypass service or domain layers
+
+  verify:
+    - MUST validate against business-rules.md
+    - MUST ensure store_id isolation in all queries
+    - MUST pass TypeScript build
+    - MUST pass lint
+    - SHOULD run tests
+
+# ARCHITECTURE
+
+architecture:
+  pattern: modular-monolith
+
+  modules:
+    - auth
+    - stores
+    - products
+    - variants
+    - sales
+    - returns
+    - metrics
+
+  layers:
+    controller:
+      description: Handles HTTP requests (input/output only)
+    service:
+      description: Orchestrates use cases and coordinates domain logic
+    domain:
+      description: Pure business logic (stock, pricing, validation)
+    repository:
+      description: Prisma data access layer
+
+  flow:
+    - controller → service → domain → repository
+
+  constraints:
+    - controllers MUST NOT contain business logic
+    - controllers MUST NOT access database directly
+    - services MUST NOT contain core business rules
+    - services MUST orchestrate domain functions only
+    - domain MUST be framework-agnostic
+    - domain MUST contain all business rules
+    - repository MUST be the only layer accessing Prisma
+    - repository MUST NOT contain business logic
+    - all modules MUST be feature-based and isolated
+    - all queries MUST include store_id
+
+# PROJECT STRUCTURE
+
+structure:
+  src:
+    modules:
+      description: Feature modules (products, sales, etc.)
+    domain:
+      description: Core business logic (pure functions)
+    common:
+      description: Shared utilities (guards, interceptors)
+    config:
+      description: Environment configuration
+    prisma:
+      description: Prisma schema and migrations
+
+# NAMING CONVENTIONS
+
+conventions:
+  naming:
+    controllers: PascalCase
+    services: PascalCase
+    modules: kebab-case
+    files: kebab-case
+    variables: camelCase
+    types: PascalCase
+    constants: UPPER_SNAKE_CASE
+
+# API RULES
+
+api_rules:
+  principles:
+    - MUST use REST conventions
+    - MUST validate DTOs using class-validator
+    - MUST return consistent response shape
+
+  response_format:
+    success: |
+      {
+        "data": any,
+        "error": null
+      }
+    error: |
+      {
+        "data": null,
+        "error": {
+          "message": string,
+          "code": string
+        }
+      }
+
+# MULTI-TENANT
+
+multi_tenant:
+  rules:
+    - EVERY entity MUST include store_id
+    - EVERY query MUST filter by store_id
+    - MUST enforce isolation via guards or middleware
+    - MUST NOT allow cross-tenant access
+
+# BUSINESS LOGIC
+
+business_logic:
+  rules:
+    - stock MUST decrease on sale
+    - stock MUST increase on return
+    - MUST validate stock before sale
+    - MUST prevent invalid returns
+    - pricing MUST depend on payment method
+
+# DATABASE
+
+database:
+  rules:
+    - MUST use Prisma migrations
+    - MUST align schema with data-models.md
+    - MUST enforce foreign keys
+    - SHOULD index store_id and relations
+
+# SECURITY
+
+security:
+  rules:
+    - MUST validate all inputs via DTOs
+    - MUST sanitize external data
+    - MUST NOT expose internal errors
+    - MUST enforce tenant isolation
+    - SHOULD use guards for auth
+
+# PERFORMANCE
+
+performance:
+  rules:
+    - SHOULD paginate large queries
+    - MUST avoid N+1 queries
+    - SHOULD index frequently queried fields
+    - MUST optimize sales and product queries
+
+# ERROR HANDLING
+
+error_handling:
+  principles:
+    - MUST NOT throw unhandled exceptions
+    - MUST return structured responses
+    - MUST log errors server-side
+
+  format:
+    response:
+      data: any
+      error: object | null
+
+  forbidden:
+    - exposing internal errors
+    - throwing raw DB errors
+
+# AI CONSTRAINTS
+
+ai_constraints:
+  forbidden:
+    - skipping store_id in queries
+    - placing business logic in controllers
+    - bypassing domain layer
+    - direct Prisma access outside repository
+    - modifying schema without updating specs
+
+  on_violation: ask_for_confirmation
+
+  limits:
+    large_file_change:
+      threshold: 300
+      action: warn
+    large_diff:
+      threshold: 500
+      action: require_approval
+
+# DOCUMENTATION
+
+documentation:
+  rules:
+    - services MUST include JSDoc
+    - complex modules SHOULD include README.md
+    - non-obvious logic MUST explain why
