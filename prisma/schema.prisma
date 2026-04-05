@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Store {
+  id         String    @id @default(uuid())
+  name       String
+  created_at DateTime  @default(now())
+  users      User[]
+  products   Product[]
+  sales      Sale[]
+  categories Category[]
+  attributes Attribute[]
+}
+
+model User {
+  id            String @id @default(uuid())
+  email         String @unique
+  password_hash String
+  store_id      String
+  store         Store  @relation(fields: [store_id], references: [id])
+
+  @@index([store_id])
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  store_id  String
+  name      String
+  parent_id String?
+  store     Store      @relation(fields: [store_id], references: [id])
+  parent    Category?  @relation("CategoryParent", fields: [parent_id], references: [id])
+  children  Category[] @relation("CategoryParent")
+  products  Product[]
+
+  @@index([store_id])
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  store_id    String
+  name        String
+  brand       String?
+  category_id String?
+  created_at  DateTime  @default(now())
+  store       Store     @relation(fields: [store_id], references: [id])
+  category    Category? @relation(fields: [category_id], references: [id])
+  variants    Variant[]
+
+  @@index([store_id])
+}
+
+model Variant {
+  id            String           @id @default(uuid())
+  product_id    String
+  sku           String           @unique
+  stock         Int              @default(0)
+  stock_min     Int              @default(0)
+  price_cash    Decimal          @db.Decimal(10, 2)
+  price_debit   Decimal          @db.Decimal(10, 2)
+  price_credit  Decimal          @db.Decimal(10, 2)
+  product       Product          @relation(fields: [product_id], references: [id])
+  attributes    VariantAttribute[]
+  sale_items    SaleItem[]
+
+  @@index([product_id])
+}
+
+model Attribute {
+  id       String           @id @default(uuid())
+  store_id String
+  name     String
+  store    Store            @relation(fields: [store_id], references: [id])
+  values   AttributeValue[]
+
+  @@index([store_id])
+}
+
+model AttributeValue {
+  id           String             @id @default(uuid())
+  attribute_id String
+  value        String
+  attribute    Attribute          @relation(fields: [attribute_id], references: [id])
+  variants     VariantAttribute[]
+}
+
+model VariantAttribute {
+  variant_id         String
+  attribute_value_id String
+  variant            Variant        @relation(fields: [variant_id], references: [id])
+  attribute_value    AttributeValue @relation(fields: [attribute_value_id], references: [id])
+
+  @@id([variant_id, attribute_value_id])
+}
+
+model Sale {
+  id             String      @id @default(uuid())
+  store_id       String
+  date           DateTime    @default(now())
+  payment_method String
+  total          Decimal     @db.Decimal(10, 2)
+  store          Store       @relation(fields: [store_id], references: [id])
+  items          SaleItem[]
+
+  @@index([store_id])
+}
+
+model SaleItem {
+  id         String   @id @default(uuid())
+  sale_id    String
+  variant_id String
+  quantity   Int
+  price      Decimal  @db.Decimal(10, 2)
+  sale       Sale     @relation(fields: [sale_id], references: [id])
+  variant    Variant  @relation(fields: [variant_id], references: [id])
+  returns    Return[]
+}
+
+model Return {
+  id           String   @id @default(uuid())
+  sale_item_id String
+  quantity     Int
+  date         DateTime @default(now())
+  sale_item    SaleItem @relation(fields: [sale_item_id], references: [id])
+}
