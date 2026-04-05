@@ -19,6 +19,8 @@ context: |
   Testing: Jest
   API: REST
   Multi-tenant: store_id isolation (shared DB)
+  Auth: Better Auth (better-auth + @thallesp/nestjs-better-auth)
+  Auth strategy: cookie-based sessions (HTTP-only), store_id sourced from session.user.store_id
 
 # WORKFLOW RULES
 
@@ -149,7 +151,8 @@ multi_tenant:
   rules:
     - EVERY entity MUST include store_id
     - EVERY query MUST filter by store_id
-    - MUST enforce isolation via guards or middleware
+    - store_id MUST be sourced from session.user.store_id (injected via @Session() decorator)
+    - MUST NOT accept store_id from request body or URL params
     - MUST NOT allow cross-tenant access
 
 # BUSINESS LOGIC
@@ -178,8 +181,11 @@ security:
     - MUST validate all inputs via DTOs
     - MUST sanitize external data
     - MUST NOT expose internal errors
-    - MUST enforce tenant isolation
-    - SHOULD use guards for auth
+    - MUST enforce tenant isolation via store_id from session
+    - Auth is handled by Better Auth — MUST NOT implement custom JWT or session logic
+    - MUST use @AllowAnonymous() for public routes
+    - MUST use @Session() decorator to access user in controllers
+    - store_id MUST always be read from session.user.store_id, never from request params or body
 
 # PERFORMANCE
 

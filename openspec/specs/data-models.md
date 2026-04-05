@@ -1,17 +1,49 @@
 # Data Models — NestJS SaaS
 
-## Store
+## Auth tables (managed by Better Auth — do not create manually)
+
+### User *(extended with store_id)*
+- id
+- email
+- name
+- store_id ← custom field added to Better Auth's user model
+- emailVerified
+- image
+- createdAt
+- updatedAt
+
+### Session *(Better Auth managed)*
+- id
+- userId
+- token
+- expiresAt
+- ipAddress
+- userAgent
+- createdAt
+- updatedAt
+
+### Account *(Better Auth managed)*
+- id
+- userId
+- accountId
+- providerId
+- accessToken
+- refreshToken
+- expiresAt
+
+### Verification *(Better Auth managed)*
+- id
+- identifier
+- value
+- expiresAt
+
+> `store_id` is a custom field on `User`. It is populated via a Better Auth `after sign-up` hook that creates a `Store` record and writes its id back to the user.
+
+## Store *(domain model — created automatically on sign-up)*
 - id
 - name
 - created_at
 
-## User
-- id
-- email
-- password_hash
-- store_id
-
-## Category
 - id
 - store_id
 - name
