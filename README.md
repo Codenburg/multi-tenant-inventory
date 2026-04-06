@@ -14,6 +14,7 @@ Built with **NestJS + Prisma + PostgreSQL**.
 - Returns with stock restoration
 - Dashboard metrics (monthly sales, top products)
 - Low stock alerts
+- Cookie-based session authentication (Better Auth)
 
 ---
 
@@ -22,6 +23,7 @@ Built with **NestJS + Prisma + PostgreSQL**.
 - [NestJS](https://nestjs.com/) — Node.js framework
 - [Prisma](https://www.prisma.io/) — ORM
 - [PostgreSQL](https://www.postgresql.org/) — Database
+- [Better Auth](https://www.better-auth.com/) — Authentication
 - TypeScript
 
 ---
@@ -58,48 +60,74 @@ npm run start:dev
 ### Environment Variables
 
 ```
-DATABASE_URL=
-JWT_SECRET=
-PORT=
+DATABASE_URL=postgresql://user:password@localhost:5432/stockly_db
+BETTER_AUTH_SECRET=your-secret-key-at-least-32-chars
+PORT=3000
 ```
+
+---
+
+## Authentication
+
+All API endpoints (except auth routes) require authentication via session cookie.
+
+### Auth Endpoints
+
+| Method | Endpoint                  | Description               |
+| ------ | ------------------------- | ------------------------- |
+| POST   | `/api/auth/sign-up/email` | Register new user + store |
+| POST   | `/api/auth/sign-in/email` | Sign in                   |
+| POST   | `/api/auth/sign-out`      | Sign out                  |
+| GET    | `/api/auth/get-session`   | Get current session       |
+
+### Using the API
+
+1. Sign up or sign in to receive a session cookie
+2. Include the cookie in subsequent requests
+3. Protected routes return `401` without a valid session
 
 ---
 
 ## API Endpoints
 
 ### Products
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/products` | List all products |
-| GET | `/products/:id` | Get a product |
-| POST | `/products` | Create a product |
-| PUT | `/products/:id` | Update a product |
-| DELETE | `/products/:id` | Delete a product |
+
+| Method | Endpoint            | Description       |
+| ------ | ------------------- | ----------------- |
+| GET    | `/api/products`     | List all products |
+| GET    | `/api/products/:id` | Get a product     |
+| POST   | `/api/products`     | Create a product  |
+| PUT    | `/api/products/:id` | Update a product  |
+| DELETE | `/api/products/:id` | Delete a product  |
 
 ### Variants
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/variants` | List variants |
-| POST | `/variants` | Create a variant |
-| PUT | `/variants/:id` | Update a variant |
-| PATCH | `/variants/:id/stock` | Update stock |
+
+| Method | Endpoint                  | Description      |
+| ------ | ------------------------- | ---------------- |
+| GET    | `/api/variants`           | List variants    |
+| POST   | `/api/variants`           | Create a variant |
+| PUT    | `/api/variants/:id`       | Update a variant |
+| PATCH  | `/api/variants/:id/stock` | Update stock     |
 
 ### Sales
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/sales` | List sales |
-| POST | `/sales` | Register a sale |
+
+| Method | Endpoint     | Description     |
+| ------ | ------------ | --------------- |
+| GET    | `/api/sales` | List sales      |
+| POST   | `/api/sales` | Register a sale |
 
 ### Returns
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/returns` | Register a return |
+
+| Method | Endpoint       | Description       |
+| ------ | -------------- | ----------------- |
+| POST   | `/api/returns` | Register a return |
 
 ### Metrics
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/metrics/monthly-sales` | Monthly sales summary |
-| GET | `/metrics/top-products` | Top sold products |
+
+| Method | Endpoint                     | Description           |
+| ------ | ---------------------------- | --------------------- |
+| GET    | `/api/metrics/monthly-sales` | Monthly sales summary |
+| GET    | `/api/metrics/top-products`  | Top sold products     |
 
 ---
 
@@ -125,8 +153,8 @@ Multi-tenancy is enforced via `store_id` on every entity and every query.
 ```
 src/
 ├── modules/
-│   ├── auth/
-│   ├── stores/
+│   ├── auth/          # Better Auth configuration
+│   ├── stores/        # Store management
 │   ├── products/
 │   ├── variants/
 │   ├── sales/
@@ -137,30 +165,6 @@ src/
 ├── config/
 └── main.ts
 ```
-
----
-
-## Contributing
-
-Contributions are welcome! Here's how to get started:
-
-1. Fork the repository
-2. Create a new branch: `git checkout -b feature/your-feature-name`
-3. Make your changes following the architecture guidelines below
-4. Run the build and linter before submitting:
-   ```bash
-   npm run build
-   npm run lint
-   ```
-5. Open a Pull Request with a clear description of the change
-
-### Guidelines
-
-- Follow the `Controller → Service → Domain → Repository` architecture strictly
-- Every query must include `store_id` for tenant isolation
-- Business logic belongs in the domain layer only
-- All inputs must be validated via DTOs using `class-validator`
-- All responses must follow `{ data, error }` format
 
 ---
 
@@ -175,4 +179,4 @@ Contributions are welcome! Here's how to get started:
 
 ---
 
-*Built for small retail stores. Designed to be fast, simple, and scalable.*
+_Built for small retail stores. Designed to be fast, simple, and scalable._
