@@ -166,17 +166,4 @@ src/
 └── main.ts
 ```
 
----
-
-## Roadmap
-
-- Product search
-- CSV export for sales
-- Barcode scanner support
-- Customer management
-- Price history
-- POS-optimized sales screen
-
----
-
 _Built for small retail stores. Designed to be fast, simple, and scalable._
