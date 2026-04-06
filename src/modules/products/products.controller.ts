@@ -13,23 +13,24 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { StoreGuard } from '../../common/guards/store.guard';
-import { StoreId } from '../../common/decorators/store-id.decorator';
+import { AuthGuard } from '@thallesp/nestjs-better-auth';
+import { Session } from '@thallesp/nestjs-better-auth';
 
 @Controller('products')
-@UseGuards(JwtAuthGuard, StoreGuard)
+@UseGuards(AuthGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  async findAll(@StoreId() storeId: string) {
+  async findAll(@Session() session: any) {
+    const storeId = session.user.store_id;
     const products = await this.productsService.findAll(storeId);
     return { data: products, error: null };
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @StoreId() storeId: string) {
+  async findOne(@Param('id') id: string, @Session() session: any) {
+    const storeId = session.user.store_id;
     const product = await this.productsService.findById(id, storeId);
     return { data: product, error: null };
   }
@@ -37,8 +38,9 @@ export class ProductsController {
   @Post()
   async create(
     @Body() createProductDto: CreateProductDto,
-    @StoreId() storeId: string,
+    @Session() session: any,
   ) {
+    const storeId = session.user.store_id;
     const product = await this.productsService.create(
       createProductDto,
       storeId,
@@ -50,8 +52,9 @@ export class ProductsController {
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @StoreId() storeId: string,
+    @Session() session: any,
   ) {
+    const storeId = session.user.store_id;
     const result = await this.productsService.update(
       id,
       updateProductDto,
@@ -62,7 +65,8 @@ export class ProductsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string, @StoreId() storeId: string) {
+  async delete(@Param('id') id: string, @Session() session: any) {
+    const storeId = session.user.store_id;
     await this.productsService.delete(id, storeId);
     return { data: null, error: null };
   }

@@ -1,21 +1,36 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AuthModule as BetterAuthNestModule } from '@thallesp/nestjs-better-auth';
+import { betterAuth } from 'better-auth';
+import { prismaAdapter } from '@better-auth/prisma-adapter';
+import { StoresModule } from '../stores/stores.module';
+import { AuthHooks } from './auth.hooks';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET as string,
-      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN ?? '7d' },
+    StoresModule,
+    BetterAuthNestModule.forRootAsync({
+      useFactory: (prisma: PrismaService) => {
+        return {
+          auth: betterAuth({
+            database: prismaAdapter(prisma, {
+              provider: 'postgresql',
+            }),
+            secret:
+              process.env.BETTER_AUTH_SECRET ?? 'default-secret-change-me',
+            session: {
+              expiresIn: 60 * 60 * 24 * 7, // 7 days
+            },
+            emailAndPassword: {
+              enabled: true,
+            },
+            hooks: {},
+          }),
+        };
+      },
+      inject: [PrismaService],
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
-  exports: [AuthService, JwtAuthGuard],
+  providers: [AuthHooks],
 })
 export class AuthModule {}

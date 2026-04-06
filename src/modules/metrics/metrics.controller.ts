@@ -1,25 +1,26 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { MetricsService } from './metrics.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { StoreGuard } from '../../common/guards/store.guard';
-import { StoreId } from '../../common/decorators/store-id.decorator';
+import { AuthGuard } from '@thallesp/nestjs-better-auth';
+import { Session } from '@thallesp/nestjs-better-auth';
 
 @Controller('metrics')
-@UseGuards(JwtAuthGuard, StoreGuard)
+@UseGuards(AuthGuard)
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}
 
   @Get('monthly-sales')
-  async getMonthlySales(@StoreId() storeId: string) {
+  async getMonthlySales(@Session() session: any) {
+    const storeId = session.user.store_id;
     const result = await this.metricsService.getMonthlySales(storeId);
     return { data: result, error: null };
   }
 
   @Get('top-products')
   async getTopProducts(
-    @StoreId() storeId: string,
+    @Session() session: any,
     @Query('limit') limit?: string,
   ) {
+    const storeId = session.user.store_id;
     const result = await this.metricsService.getTopProducts(
       storeId,
       limit ? parseInt(limit, 10) : undefined,
@@ -29,9 +30,10 @@ export class MetricsController {
 
   @Get('low-stock')
   async getLowStockProducts(
-    @StoreId() storeId: string,
+    @Session() session: any,
     @Query('limit') limit?: string,
   ) {
+    const storeId = session.user.store_id;
     const result = await this.metricsService.getLowStockProducts(
       storeId,
       limit ? parseInt(limit, 10) : undefined,

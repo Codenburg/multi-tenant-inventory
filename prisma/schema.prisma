@@ -18,13 +18,49 @@ model Store {
 }
 
 model User {
-  id            String @id @default(uuid())
-  email         String @unique
-  password_hash String
-  store_id      String
-  store         Store  @relation(fields: [store_id], references: [id])
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password_hash String?
+  storeId       String?
+  store         Store?    @relation(fields: [storeId], references: [id])
+  sessions      Session[]
+  accounts      Account[]
 
-  @@index([store_id])
+  @@index([storeId])
+}
+
+// Better Auth tables
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  expiresAt DateTime
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  accountId         String
+  providerId        String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken       String?
+  refreshToken      String?
+  accessTokenExpiry DateTime?
+  refreshTokenExpiry DateTime?
+
+  @@index([userId])
+  @@unique([providerId, accountId])
+}
+
+model Verification {
+  id        String   @id @default(uuid())
+  identifier String
+  value     String
+  expiresAt DateTime
+
+  @@index([identifier])
 }
 
 model Category {

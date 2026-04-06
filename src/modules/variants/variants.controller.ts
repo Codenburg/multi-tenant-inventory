@@ -12,23 +12,24 @@ import { VariantsService } from './variants.service';
 import { CreateVariantDto } from './dto/create-variant.dto';
 import { UpdateVariantDto } from './dto/update-variant.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { StoreGuard } from '../../common/guards/store.guard';
-import { StoreId } from '../../common/decorators/store-id.decorator';
+import { AuthGuard } from '@thallesp/nestjs-better-auth';
+import { Session } from '@thallesp/nestjs-better-auth';
 
 @Controller('variants')
-@UseGuards(JwtAuthGuard, StoreGuard)
+@UseGuards(AuthGuard)
 export class VariantsController {
   constructor(private readonly variantsService: VariantsService) {}
 
   @Get()
-  async findAll(@StoreId() storeId: string) {
+  async findAll(@Session() session: any) {
+    const storeId = session.user.store_id;
     const variants = await this.variantsService.findAll(storeId);
     return { data: variants, error: null };
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @StoreId() storeId: string) {
+  async findOne(@Param('id') id: string, @Session() session: any) {
+    const storeId = session.user.store_id;
     const variant = await this.variantsService.findById(id, storeId);
     return { data: variant, error: null };
   }
@@ -36,8 +37,9 @@ export class VariantsController {
   @Post()
   async create(
     @Body() createVariantDto: CreateVariantDto,
-    @StoreId() storeId: string,
+    @Session() session: any,
   ) {
+    const storeId = session.user.store_id;
     const variant = await this.variantsService.create(
       createVariantDto,
       storeId,
@@ -49,8 +51,9 @@ export class VariantsController {
   async update(
     @Param('id') id: string,
     @Body() updateVariantDto: UpdateVariantDto,
-    @StoreId() storeId: string,
+    @Session() session: any,
   ) {
+    const storeId = session.user.store_id;
     const result = await this.variantsService.update(
       id,
       updateVariantDto,
@@ -63,8 +66,9 @@ export class VariantsController {
   async updateStock(
     @Param('id') id: string,
     @Body() updateStockDto: UpdateStockDto,
-    @StoreId() storeId: string,
+    @Session() session: any,
   ) {
+    const storeId = session.user.store_id;
     const result = await this.variantsService.updateStock(
       id,
       updateStockDto.delta,

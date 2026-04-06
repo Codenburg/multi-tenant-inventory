@@ -1,20 +1,20 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ReturnsService } from './returns.service';
 import { CreateReturnDto } from './dto/create-return.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { StoreGuard } from '../../common/guards/store.guard';
-import { StoreId } from '../../common/decorators/store-id.decorator';
+import { AuthGuard } from '@thallesp/nestjs-better-auth';
+import { Session } from '@thallesp/nestjs-better-auth';
 
 @Controller('returns')
-@UseGuards(JwtAuthGuard, StoreGuard)
+@UseGuards(AuthGuard)
 export class ReturnsController {
   constructor(private readonly returnsService: ReturnsService) {}
 
   @Post()
   async create(
     @Body() createReturnDto: CreateReturnDto,
-    @StoreId() storeId: string,
+    @Session() session: any,
   ) {
+    const storeId = session.user.store_id;
     const returnRecord = await this.returnsService.create(
       createReturnDto.sale_item_id,
       createReturnDto.quantity,
